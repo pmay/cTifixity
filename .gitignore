@@ -1,0 +1,8 @@
+# Project Specific #
+build/
+
+# Eclipse Settings #
+####################
+.cproject
+.project
+.settings/
