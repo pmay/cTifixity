@@ -2,7 +2,7 @@
 
 TIFF Image Data Checksummer
 
-### What does X do?
+### What does Tifixity do?
 
 Checksums the image data portion of a TIFF file, as opposed to the entire TIFF file. Useful 
 for ensuring that the pixel data remains the same before and after some process.
