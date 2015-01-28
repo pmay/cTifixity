@@ -1,0 +1,18 @@
+#ifndef TIFIXITYCONFIG_H
+#define TIFIXITYCONFIG_H
+
+/* String function macros */
+#define str(s) 		  		#s 
+#define xstr(s) 	  		str(s)
+
+/* Options and Settings from CMakeList */
+#define PROJECT 			"@PROJECT@"
+#define VERSION_MAJOR		@VERSION_MAJOR@
+#define VERSION_MINOR		@VERSION_MINOR@
+#define VERSION_REVISION	@VERSION_REVISION@
+#define ISSUES_ADDRESS		"@ISSUES_ADDRESS@"
+
+/* Calculated macros */
+#define VERSION 	  		PROJECT " " xstr(VERSION_MAJOR) "." xstr(VERSION_MINOR) "." xstr(VERSION_REVISION)
+
+#endif /* TIFIXITYCONFIG_H */

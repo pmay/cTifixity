@@ -18,6 +18,7 @@
  * Calculates the MD5 Hash for the image data portion of a TIFF file.
  *
  * Todo:
+ *  - modularise code (checksumming function)
  *  - Auto detect whether to remove alpha or not (currently alpha is removed)
  *  - Checksum image data or other stuff (use CLI flags? Output multiple MD5s)
  *  - Make output file write optional (use CLI flags)
@@ -26,11 +27,71 @@
  *      Author: Peter May (Peter.May@bl.uk)
  */
 
+#include <argp.h>
 #include <openssl/md5.h>
 #include "tiffio.h"
+#include "tifixityConfig.h"
+
+const char* argp_program_version = VERSION;
+const char* argp_program_bug_address = ISSUES_ADDRESS;
+
+/* Used by main to communicate with parse_opt. */
+struct arguments
+{
+  char* args[1];                /* Args: TIFF */
+  /*int verbose;*/					/* The -v flag */
+};
+
+/* Argp Options */
+static struct argp_option options[] = {
+  /* Name, key, arg, flags, doc */
+  //{"verbose", 0, 0, 0, "Produce verbose output" },
+  { 0 }
+};
+
+/* Argp Parser */
+static error_t parse_opt (int key, char* arg, struct argp_state* state)
+{
+	struct arguments* arguments = state->input;
+
+	switch (key){
+/*	  case 'v':
+		  // verbose output selected
+		  arguments->verbose = 1;
+		  break;*/
+	  case ARGP_KEY_ARG:
+		  if (state->arg_num >= 1) {
+			  // too many arguments
+			  argp_usage (state);
+		  }
+		  arguments->args[state->arg_num] = arg;
+		  break;
+	  case ARGP_KEY_END:
+		  if (state->arg_num < 1) {
+			  // not enough arguments
+			  argp_usage (state);
+		  }
+		  break;
+	  default:
+		  return ARGP_ERR_UNKNOWN;
+	}
+	return 0;
+}
+
+/* Args_doc. Description of the non-optional command-line arguments */
+static char args_doc[] = "TIFF";
+
+/* Doc. Program documentation */
+static char doc[] = "tifixty -- Calculates the MD5 checksum of the image data (only) within a TIFF file";
+
+/* Argp structure */
+static struct argp argp = {options, parse_opt, args_doc, doc};
 
 int main(int argc, char* argv[])
 {
+	struct arguments arguments;
+//	arguments.verbose = 0;
+
 //	FILE *f1;
 
 	int bytes_per_pixel = 3;		/* 3 bytes/pixel = RGB, 4bytes/pixel=rgba */
@@ -38,6 +99,9 @@ int main(int argc, char* argv[])
 	int n;
 	MD5_CTX c;
 	unsigned char out[MD5_DIGEST_LENGTH];
+
+	/* Process arguments */
+	argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
 	MD5_Init(&c);
 
