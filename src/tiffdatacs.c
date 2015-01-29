@@ -39,12 +39,14 @@ const char* argp_program_bug_address = ISSUES_ADDRESS;
 struct arguments
 {
   char* args[1];                /* Args: TIFF */
+  char* extract;					/* Extract raster data to binary file */
   /*int verbose;*/					/* The -v flag */
 };
 
 /* Argp Options */
 static struct argp_option options[] = {
   /* Name, key, arg, flags, doc */
+  {"extract", 'e', "OUTFILE", 0, "Extract raster data to OUTFILE"},
   //{"verbose", 0, 0, 0, "Produce verbose output" },
   { 0 }
 };
@@ -59,6 +61,9 @@ static error_t parse_opt (int key, char* arg, struct argp_state* state)
 		  // verbose output selected
 		  arguments->verbose = 1;
 		  break;*/
+	  case 'e':
+		  arguments->extract = arg;
+		  break;
 	  case ARGP_KEY_ARG:
 		  if (state->arg_num >= 1) {
 			  // too many arguments
@@ -89,10 +94,11 @@ static struct argp argp = {options, parse_opt, args_doc, doc};
 
 int main(int argc, char* argv[])
 {
-	struct arguments arguments;
-//	arguments.verbose = 0;
+	FILE* extract_out;
 
-//	FILE *f1;
+	struct arguments arguments;
+	arguments.extract = NULL;
+//	arguments.verbose = 0;
 
 	int bytes_per_pixel = 3;		/* 3 bytes/pixel = RGB, 4bytes/pixel=rgba */
 
@@ -103,12 +109,20 @@ int main(int argc, char* argv[])
 	/* Process arguments */
 	argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
+	/* Initialise binary_out output stream to write
+	 * raster data to.
+	 */
+	if (arguments.extract){
+		extract_out = fopen(arguments.extract, "wb");
+		if(extract_out==NULL){
+			printf("File could not be opened: %d\n", strerror(errno));
+			return(1);
+		}
+	}
+
 	MD5_Init(&c);
 
-//	f1 = fopen("file.bin", "wb");
-
-
-    TIFF* tif = TIFFOpen(argv[1], "r");
+    TIFF* tif = TIFFOpen(arguments.args[0], "r");
     if (tif) {
     	uint32 w, h;		/* image width and height */
     	size_t npixels;		/* # pixels in image */
@@ -133,8 +147,10 @@ int main(int argc, char* argv[])
     				count--;
     			}
 
-
-    			//fwrite(raster, bytes_per_pixel, npixels, f1);
+    			/* Write the raster data out */
+    			if (extract_out){
+    				fwrite(raster, bytes_per_pixel, npixels, extract_out);
+    			}
 
     			// Calculate the MD5
     			MD5_Update(&c, raster, (npixels*bytes_per_pixel));
@@ -151,6 +167,11 @@ int main(int argc, char* argv[])
 		}
 		printf("\n");
     }
-//    fclose(f1);
+
+    /* Close up the output file if necessary */
+    if (extract_out){
+    	fclose(extract_out);
+    }
+
     return 0;
 }
